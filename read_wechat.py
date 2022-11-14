@@ -41,7 +41,7 @@ def load_wechat_bills(xlsx_path):
 
 
 if __name__ == '__main__':
-    path = './微信支付账单(20221001-20221031).xlsx'
+    path = './微信支付账单(20221001-20221031).csv'
     wechat_bills = load_wechat_bills(path)
     if len(wechat_bills) > 0:
         print('bills_list', wechat_bills[0].to_str())
