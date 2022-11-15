@@ -6,11 +6,11 @@ import xlwings as xw
 def load_alipay_bills(xlsx_path):
     print('load_alipay_bills')
     wb = xw.Book(xlsx_path)
-    print(wb.sheets)
+    # print(wb.sheets)
     # print(wb.sheets.active)
     sheet1 = wb.sheets[0]
     # 输出工作簿名称
-    print(sheet1.name)
+    print('sheet1 name:', sheet1.name)
 
     # 工作表sheet中有数据区域最大的行数，法2
     max_row = sheet1.used_range.last_cell.row - 7
@@ -35,9 +35,10 @@ def load_alipay_bills(xlsx_path):
             continue
         new_b = BillInfo(time=time[i], g_type=None, in_out=in_out[i], amount=amount[i], account1='支付宝',
                          seller=seller[i], goods=goods[i])
-        print('new bill:', new_b.to_str())
+        # print('new bill:', new_b.to_str())
         bills_list.append(new_b)
     wb.close()
+    print('load_alipay_bills done. cnt', len(bills_list))
     return bills_list
 
 

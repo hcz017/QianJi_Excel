@@ -1,20 +1,41 @@
+# -*- coding: utf-8 -*-
+import datetime
+import os
+
 import qianji_helps
-import read_wechat
 import read_alipay
+import read_wechat
+
+
+def getfiles():
+    filenames = os.listdir(r'./')
+    bill_file = []
+    # 只返回扩展名是 csv 和 xlsx 的文件
+    for file in filenames:
+        if str(file).endswith('csv'):
+            bill_file.append(file)
+        if str(file).endswith('xlsx'):
+            bill_file.append(file)
+    print(bill_file)
+    return bill_file
+
 
 if __name__ == '__main__':
-    name = '2022-11.xlsx'
-    # create new qianji excel
-    qianji_helps.create_new_xlsx(xlsx_name=name)
-    # read wechat bills
-    wechat_bills = read_wechat.load_wechat_bills(xlsx_path='./微信支付账单(20221001-20221031).csv')
-    print('wechat bills count', len(wechat_bills))
-    # write to qianji excel
-    qianji_helps.write_data(name, wechat_bills)
+    # 以年月为文件名
+    ISOTIMEFORMAT = '%Y-%m-%d %H:%M:%S'
+    theTime = datetime.datetime.now().strftime(ISOTIMEFORMAT)
+    output_name = theTime[:7] + '.xlsx'
 
-    alipy_bills = read_alipay.load_alipay_bills(xlsx_path='./alipay_record_20221113_1558_1.csv')
-    print('alipay bills count', len(alipy_bills))
-    # write to qianji excel
-    qianji_helps.write_data(name, alipy_bills)
+    # create new  qianjiexcel
+    qianji_helps.create_new_xlsx(xlsx_name=output_name)
+
+    bill_files = getfiles()
+    for file in bill_files:
+        if file.startswith('微信'):
+            wechat_bills = read_wechat.load_wechat_bills(xlsx_path=file)
+            qianji_helps.write_data(output_name, wechat_bills)
+        if file.startswith('alipay'):
+            alipy_bills = read_alipay.load_alipay_bills(xlsx_path=file)
+            qianji_helps.write_data(output_name, alipy_bills)
 
     # todo: refine type

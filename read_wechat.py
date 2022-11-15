@@ -4,15 +4,12 @@ import xlwings as xw
 def load_wechat_bills(xlsx_path):
     print('load_wechat_bills')
     wb = xw.Book(xlsx_path)
-    print(wb.sheets)
+    # print(wb.sheets)
+    # 只有当表格打开时才有active sheet
     # print(wb.sheets.active)
     sheet1 = wb.sheets[0]
     # 输出工作簿名称
-    print(sheet1.name)
-    # 写入值
-    # sheet1.range('A1').value = 'python知识学堂'
-    # 读值并打印
-    print('value of A1:', sheet1.range('A1').value)
+    print('sheet1 name:', sheet1.name)
 
     # 工作表sheet中有数据区域最大的行数，法2
     max_row = sheet1.used_range.last_cell.row
@@ -34,9 +31,10 @@ def load_wechat_bills(xlsx_path):
     for i in range(len(time)):
         new_b = BillInfo(time=time[i], g_type=goods_type[i], seller=seller[i], account1='微信', goods=goods[i],
                          in_out=in_out[i], amount=amount[i])
-        print('new bill:', new_b.to_str())
+        # print('new bill:', new_b.to_str())
         bills_list.append(new_b)
     wb.close()
+    print('load_wechat_bills done. cnt:', len(bills_list))
     return bills_list
 
 
