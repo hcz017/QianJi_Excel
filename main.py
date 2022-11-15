@@ -22,11 +22,11 @@ def getfiles():
 
 if __name__ == '__main__':
     # 以年月为文件名
-    ISOTIMEFORMAT = '%Y-%m-%d %H:%M:%S'
-    theTime = datetime.datetime.now().strftime(ISOTIMEFORMAT)
+    ISO_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+    theTime = datetime.datetime.now().strftime(ISO_TIME_FORMAT)
     output_name = theTime[:7] + '.xlsx'
 
-    # create new  qianjiexcel
+    # create new  qianji excel
     qianji_helps.create_new_xlsx(xlsx_name=output_name)
 
     bill_files = getfiles()
@@ -38,4 +38,4 @@ if __name__ == '__main__':
             alipy_bills = read_alipay.load_alipay_bills(xlsx_path=file)
             qianji_helps.write_data(output_name, alipy_bills)
 
-    # todo: refine type
+    # todo: refine category

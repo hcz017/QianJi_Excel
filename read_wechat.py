@@ -18,22 +18,22 @@ def load_wechat_bills(xlsx_path):
     max_col = sheet1.used_range.last_cell.column
     print('max col', max_col)
 
-    time = sheet1.range((18, 1), (max_row, 1)).value
+    date_time = sheet1.range((18, 1), (max_row, 1)).value
     goods_type = sheet1.range((18, 2), (max_row, 2)).value
     seller = sheet1.range((18, 3), (max_row, 3)).value
     goods = sheet1.range((18, 4), (max_row, 4)).value
     in_out = sheet1.range((18, 5), (max_row, 5)).value
     amount = sheet1.range((18, 6), (max_row, 6)).value
+    wb.close()
 
     from bill import BillInfo
 
     bills_list = []
-    for i in range(len(time)):
-        new_b = BillInfo(time=time[i], g_type=goods_type[i], seller=seller[i], account1='微信', goods=goods[i],
-                         in_out=in_out[i], amount=amount[i])
+    for i in range(len(date_time)):
+        new_b = BillInfo(date_time=date_time[i], category=goods_type[i], seller=seller[i], account1='微信',
+                         goods=goods[i], in_out=in_out[i], amount=amount[i])
         # print('new bill:', new_b.to_str())
         bills_list.append(new_b)
-    wb.close()
     print('load_wechat_bills done. cnt:', len(bills_list))
     return bills_list
 

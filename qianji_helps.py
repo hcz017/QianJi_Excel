@@ -33,8 +33,9 @@ def write_data(path, bills):
         bill = bills[i]
         # sheet1.range('A2').options(transpose=True).value = bill.time
         # 从第2行第一列 逐行写入
-        sheet1.range(i + max_row + 1, 1).value = [bill.time, bill.goods_type, bill.in_out, bill.amount, bill.account1,
-                                                  bill.account2, bill.remarks, '', bill.seller, bill.goods]
+        sheet1.range(i + max_row + 1, 1).value = [bill.date_time, bill.category, bill.in_out, bill.amount,
+                                                  bill.account1, bill.account2, bill.remarks, '', bill.seller,
+                                                  bill.goods]
     wb.save()
     wb.close()
     print('write_data done')
@@ -43,4 +44,3 @@ def write_data(path, bills):
 if __name__ == '__main__':
     name = 'qianji_test.xlsx'
     create_new_xlsx(name)
-    write_data(name, None)

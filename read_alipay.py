@@ -19,8 +19,7 @@ def load_alipay_bills(xlsx_path):
     max_col = sheet1.used_range.last_cell.column
     print('max col', max_col)
 
-    time = sheet1.range((6, 4), (max_row, 4)).value
-    g_type = sheet1.range((6, 2), (max_row, 2)).value
+    date_time = sheet1.range((6, 4), (max_row, 4)).value
     in_out = sheet1.range((6, 11), (max_row, 11)).value
     amount = sheet1.range((6, 10), (max_row, 10)).value
     seller = sheet1.range((6, 8), (max_row, 8)).value
@@ -30,10 +29,10 @@ def load_alipay_bills(xlsx_path):
 
     bills_list = []
 
-    for i in range(len(time)):
-        if isinstance(time[i], datetime.datetime) is False:
+    for i in range(len(date_time)):
+        if isinstance(date_time[i], datetime.datetime) is False:
             continue
-        new_b = BillInfo(time=time[i], g_type=None, in_out=in_out[i], amount=amount[i], account1='支付宝',
+        new_b = BillInfo(date_time=date_time[i], category=None, in_out=in_out[i], amount=amount[i], account1='支付宝',
                          seller=seller[i], goods=goods[i])
         # print('new bill:', new_b.to_str())
         bills_list.append(new_b)
