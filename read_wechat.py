@@ -1,3 +1,6 @@
+import time
+
+import pandas as pd
 import xlwings as xw
 
 
@@ -38,8 +41,28 @@ def load_wechat_bills(xlsx_path):
     return bills_list
 
 
+def load_wechat_bills_pandas(input_path):
+    print('load_wechat_bills_pandas')
+    df = pd.read_csv(input_path, skiprows=16)
+    df.drop(columns=['支付方式', '当前状态', '交易单号', '商户单号', '备注'], inplace=True)
+    df.columns = ['时间', '分类', '交易对方', '商品', '类型', '金额']
+    df['账户1'] = '微信'
+    df['备注'] = df['交易对方']
+    df2 = df[['时间', '分类', '类型', '金额', '账户1', '备注', '交易对方', '商品']]
+    print('load_wechat_bills_pandas done')
+    return df2
+
+
 if __name__ == '__main__':
     path = './微信支付账单(20221001-20221031).csv'
+    start_time = time.time()
     wechat_bills = load_wechat_bills(path)
+    print("耗时: {:.3f}秒".format(time.time() - start_time))
     if len(wechat_bills) > 0:
-        print('bills_list', wechat_bills[0].to_str())
+        print(wechat_bills[0].to_str())
+
+    start_time = time.time()
+    wechat_bills_df = load_wechat_bills_pandas(path)
+    print("耗时: {:.3f}秒".format(time.time() - start_time))
+    if wechat_bills:
+        print(wechat_bills_df.iloc[0].values)
