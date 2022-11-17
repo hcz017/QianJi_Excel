@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import os
+import sys
 import time
 
 import xlwings as xw
@@ -159,7 +160,10 @@ def getfiles():
 
 if __name__ == '__main__':
     start_time = time.time()
-
+    bill_files = getfiles()
+    if len(bill_files) is 0:
+        print('当前目录下没有账单文件')
+        sys.exit()
     # 以年月为文件名
     ISO_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
     theTime = datetime.datetime.now().strftime(ISO_TIME_FORMAT)
@@ -168,7 +172,6 @@ if __name__ == '__main__':
     # 创建qianji 账单模板 excel
     qianji_helper = QianJiHelper(xlsx_name=output_name)
 
-    bill_files = getfiles()
     for file in bill_files:
         if file.startswith('微信'):
             wechat_bills = load_wechat_bills(xlsx_path=file)
