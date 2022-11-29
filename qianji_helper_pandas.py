@@ -18,7 +18,7 @@ def load_alipay_bills(xlsx_path):
     # print('df.columns\n', df.columns)
     # print('df content\n', df)
     # 删掉最后一列无效值
-    df.drop(df.columns[[-1]], axis=1, inplace=True)
+    df = df.drop(df.columns[[-1]], axis=1, inplace=False)
 
     # 1. 数据清洗（去除无效数据和不想要的数据）
     # 1.1 先删除含有 nan 的行
@@ -37,7 +37,7 @@ def load_alipay_bills(xlsx_path):
     # 从dataframe 中删除过滤出的行
     empty_series = pd.Series(to_drop_index)
     index_names = df1[empty_series].index
-    df1.drop(index_names, inplace=True)
+    df1 = df1.drop(index_names, inplace=False)
 
     # 另一种遍历筛选方式：只筛选订单号为空的行
     # to_drop_index = []
@@ -48,7 +48,7 @@ def load_alipay_bills(xlsx_path):
     # # 方法一 按照列名称选择
     # select_cols = ['付款时间                ', '交易对方            ', '商品名称                ', '金额（元）   ',
     #                '收/支     ']
-    # df1 = df[select_cols]
+    # df_filtered = df1[select_cols].copy()
     # print('df1.columns', df1.columns)
     #
     # # 方法二 选择连续列
@@ -91,8 +91,9 @@ def load_wechat_bills(xlsx_path):
     # 新增一列并用另一列的值赋值
     df_filtered['备注'] = df['交易对方']
     df_filtered['账单图片'] = ''
-    # 排序
-    df_x = df_filtered[['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方', '商品名称']]
+    # 排序 本质上应该是按列组合成新的 dataframe
+    df_x = df_filtered[
+        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方', '商品名称']]
     print('load_wechat_bills_pandas done')
     return df_x
 
@@ -163,10 +164,9 @@ if __name__ == '__main__':
 
     # 创建qianji 账单模板 excel
     # qianji_helper = QianJiHelper(xlsx_name=output_name)
-    cols = ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方 / 对方名称',
-            '交易地点 / 商品名称']
-    wechat_bills_df = pd.DataFrame(columns=cols, index=[0])
-    alipy_bills_df = pd.DataFrame(columns=cols, index=[0])
+
+    wechat_bills_df = pd.DataFrame()
+    alipy_bills_df = pd.DataFrame()
     for file in bill_files:
         if file.startswith('微信'):
             wechat_bills_df = load_wechat_bills(xlsx_path=file)
