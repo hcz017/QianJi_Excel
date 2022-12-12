@@ -14,7 +14,7 @@ USING_XLWINGS = True
 def load_alipay_bills(xlsx_path):
     print('load_alipay_bills')
     # 跳过头部16行信息
-    df = pd.read_csv(xlsx_path, encoding='gb2312', skiprows=4)
+    df = pd.read_csv(xlsx_path, encoding='gbk', skiprows=4)
     # print('df.columns\n', df.columns)
     # print('df content\n', df)
     # 删掉最后一列无效值
