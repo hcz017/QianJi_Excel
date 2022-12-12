@@ -176,6 +176,14 @@ if __name__ == '__main__':
     df_all = pd.concat([wechat_bills_df, alipy_bills_df])
 
     # todo: refine category
+    for index, row in df_all.iterrows():
+        remark = row['备注']
+        if '食堂' in remark or '亚惠' in remark or '河南大饼' in remark or '避风塘' in remark:
+            row['分类'] = '三餐'
+        if '高德' in remark:
+            row['分类'] = '打车'
+        if '钱大妈' in remark:
+            row['分类'] = '食材'
 
     # 创建qianji 账单模板 excel
     # 以年月为文件名
