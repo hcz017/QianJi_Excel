@@ -127,7 +127,7 @@ def load_ccbc_bills(xlsx_path):
         df_lite['时间'][i] = data + ' ' + str(df_lite['交易时间                '][i])
 
         df_lite['类型'][i] = '支出' if float(
-            df_lite['支出                '][i].replace(',', '')) > 0.00 else '收入'
+            str(df_lite['支出                '][i]).replace(',', '')) > 0.00 else '收入'
         df_lite['金额'][i] = df_lite['支出                '][i] if df_lite['类型'][i] == '支出' else \
             df_lite['收入                '][i]
 
@@ -213,7 +213,7 @@ def get_bills():
             wechat_bills_df = load_wechat_bills(xlsx_path=file)
         if file.startswith('alipay'):
             alipy_bills_df = load_alipay_bills(xlsx_path=file)
-        if file.startswith('交易明细'):
+        if file.startswith('交易明细'):  # 建设银行
             ccbc_bills_df = load_ccbc_bills(xlsx_path=file)
     # 组合df
     df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df])
@@ -223,7 +223,7 @@ def get_bills():
 if __name__ == '__main__':
     start_time = time.time()
     bill_files = getfiles()
-    if len(bill_files) is 0:
+    if len(bill_files) == 0:
         print('当前目录下没有账单文件')
         sys.exit()
 
