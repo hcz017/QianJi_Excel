@@ -3,6 +3,7 @@ import datetime
 import os
 import sys
 import time
+import json
 
 import pandas as pd
 import xlwings as xw
@@ -22,7 +23,7 @@ def load_alipay_bills(xlsx_path):
 
     # 1. 数据清洗（去除无效数据和不想要的数据）
     # 1.1 先删除含有 nan 的行
-    df_lite = df.dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)
+    df_lite = df.dropna(axis=0, how='any')
     # 1.2 筛选出空白行并删除
     # 删除 订单编号 是空的，删除交易状态不是交易成功的
     to_drop_index = []
@@ -105,7 +106,7 @@ def load_wechat_bills(xlsx_path):
 def load_ccbc_bills(xlsx_path):
     print('load_ccbc_bills')
     # 跳过头部5行信息
-    df = pd.read_csv(xlsx_path, skiprows=5)
+    df = pd.read_excel(xlsx_path, skiprows=5)
     # 删掉最后一行无效值
     df_lite = df.drop(df.index[[-1]], inplace=False)
     # 列名
@@ -159,7 +160,7 @@ class QianJiHelper(object):
         if USING_XLWINGS:
             print('create_new_xlsx:', self.xlsx_name)
             import os
-            if os.path.exists(self.xlsx_name) is True:
+            if os.path.exists(self.xlsx_name):
                 print('will overwrite exported file!')
             # 方法1：
             # 创建一个新的App，并在新App中新建一个Book
@@ -195,11 +196,7 @@ class QianJiHelper(object):
 
 def getfiles():
     filenames = os.listdir(r'./')
-    bill_file = []
-    # 只返回扩展名是 csv 和 xlsx 的文件
-    for filename in filenames:
-        if str(filename).endswith('csv') or str(filename).endswith('xlsx') or str(filename).endswith('xls'):
-            bill_file.append(filename)
+    bill_file = [filename for filename in filenames if filename.endswith(('.csv', '.xlsx', '.xls'))]
     print('bill_file:', bill_file)
     return bill_file
 
@@ -220,6 +217,19 @@ def get_bills():
     return df_all
 
 
+def load_keyword_mapping(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        mapping = json.load(file)
+    return mapping
+
+
+def classify_text(text, keyword_to_category_mapping):
+    for keyword, category in keyword_to_category_mapping.items():
+        if keyword.lower() in text.lower():  # 不区分大小写匹配
+            return category
+    return None
+
+
 if __name__ == '__main__':
     start_time = time.time()
     bill_files = getfiles()
@@ -231,17 +241,19 @@ if __name__ == '__main__':
     # qianji_helper = QianJiHelper(xlsx_name=output_name)
 
     df_all = get_bills()
+
+    # 加载关键字到类别的映射
+    keyword_to_category_mapping = load_keyword_mapping('category_mapping.json')
+
     # todo: refine category
     for index, row in df_all.iterrows():
         remark = row['备注']
         if pd.isnull(remark):
             continue
-        if '食堂' in remark or '亚惠' in remark or '河南大饼' in remark or '避风塘' in remark:
-            row['分类'] = '三餐'
-        elif '高德' in remark or '滴滴' in remark:
-            row['分类'] = '打车'
-        elif '钱大妈' in remark or '满彭' in remark:
-            row['分类'] = '食材'
+        category = classify_text(remark, keyword_to_category_mapping)
+        if category is not None:
+            # print(f"备注: '{remark}' -> 类别: {category}")
+            row['分类'] = category
 
     # 创建qianji 账单模板 excel
     # 以年月为文件名
