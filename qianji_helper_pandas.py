@@ -28,7 +28,7 @@ def load_alipay_bills(xlsx_path):
     # 删除 订单编号 是空的，删除交易状态不是交易成功的
     to_drop_index = []
     for index, row in df_lite.iterrows():
-        if row['商家订单号               '].isspace():
+        if row['商家订单号               '].isspace() and row['付款时间                '].isspace():
             to_drop_index.append(True)
             continue
         if '交易关闭' in row['交易状态    '] or '退款成功' in row['交易状态    ']:
@@ -70,9 +70,11 @@ def load_alipay_bills(xlsx_path):
     dst_df['分类'] = ' '
     # 新增一列并用另一列的值赋值
     dst_df['备注'] = dst_df['交易对方']
+    dst_df['账单标记'] = ''
     dst_df['账单图片'] = ''
     # 5. 排序
-    dst_df = dst_df[['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方', '商品名称']]
+    dst_df = dst_df[
+        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方', '商品名称']]
     print('load_alipay_bills done')
     return dst_df
 
@@ -95,10 +97,11 @@ def load_wechat_bills(xlsx_path):
     df_lite['分类'] = ' '
     # 新增一列并用另一列的值赋值
     df_lite['备注'] = df['交易对方']
+    df_lite['账单标记'] = ''
     df_lite['账单图片'] = ''
     # 排序 本质上应该是按列组合成新的 dataframe
     dst_df = df_lite[
-        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方', '商品名称']]
+        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方', '商品名称']]
     print('load_wechat_bills_pandas done')
     return dst_df
 
@@ -139,13 +142,15 @@ def load_ccbc_bills(xlsx_path):
     df_lite['账户2'] = ''
     df_lite['分类'] = ' '
     df_lite['备注'] = df['对方户名          ']
+    df_lite['账单标记'] = ''
     df_lite['账单图片'] = ''
     # 排序 本质上应该是按列组合成新的 dataframe
     dst_df = df_lite[
-        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '对方户名          ',
+        ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '对方户名          ',
          '交易地点                ']]
     # 列重命名
-    dst_df.columns = ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方', '商品名称']
+    dst_df.columns = ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方',
+                      '商品名称']
     print('load_ccbc_bills done')
     return dst_df
 
@@ -168,12 +173,13 @@ class QianJiHelper(object):
             sheet1 = wb.sheets["sheet1"]
             sheet1.clear()
             sheet1.range('A1').value = [
-                ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '交易对方 / 对方名称',
+                ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片',
+                 '交易对方 / 对方名称',
                  '交易地点 / 商品名称']]
             sheet1.range('A1').column_width = 16
             sheet1.range('G1').column_width = 20
-            sheet1.range('I1').column_width = 20
             sheet1.range('J1').column_width = 20
+            sheet1.range('K1').column_width = 20
             wb.save(self.xlsx_name)
             wb.close()
         print('create_new_xlsx done')
