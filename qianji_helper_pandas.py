@@ -89,7 +89,8 @@ def load_wechat_bills(xlsx_path):
     # 列重命名
     df_lite.columns = ['时间', '分类', '交易对方', '商品名称', '类型', '金额']
     # 去除 ￥ 符号
-    df_lite['金额'] = df_lite['金额'].apply(lambda x: x[1:]).astype('float')
+    # df_lite['金额'] = df_lite['金额'].apply(lambda x: x[1:]).astype('float')
+    df_lite['金额'] = df_lite['金额'].str.slice(1).astype('float')
     # 新增一列并赋值
     df_lite['账户1'] = '微信'
     df_lite['账户2'] = ''
@@ -200,23 +201,24 @@ class QianJiHelper(object):
         print('write_data done')
 
 
-def getfiles():
-    filenames = os.listdir(r'./')
-    bill_file = [filename for filename in filenames if filename.endswith(('.csv', '.xlsx', '.xls'))]
+def get_files(dir):
+    filenames = os.listdir(dir)
+    bill_file = [os.path.join(dir, filename) for filename in filenames if
+                 filename.endswith(('.csv', '.xlsx', '.xls'))]
     print('bill_file:', bill_file)
     return bill_file
 
 
-def get_bills():
+def get_bills(bill_files):
     wechat_bills_df = pd.DataFrame()
     alipy_bills_df = pd.DataFrame()
     ccbc_bills_df = pd.DataFrame()
     for file in bill_files:
-        if file.startswith('微信'):
+        if os.path.basename(file).startswith('微信'):
             wechat_bills_df = load_wechat_bills(xlsx_path=file)
-        if file.startswith('alipay'):
+        if os.path.basename(file).startswith('alipay'):
             alipy_bills_df = load_alipay_bills(xlsx_path=file)
-        if file.startswith('交易明细'):  # 建设银行
+        if os.path.basename(file).startswith('交易明细'):  # 建设银行
             ccbc_bills_df = load_ccbc_bills(xlsx_path=file)
     # 组合df
     df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df])
@@ -238,7 +240,14 @@ def classify_text(text, keyword_to_category_mapping):
 
 if __name__ == '__main__':
     start_time = time.time()
-    bill_files = getfiles()
+    # 输入目录
+    if len(sys.argv) > 1:
+        input_dir = sys.argv[1]
+    else:
+        # 当前目录
+        input_dir = os.path.dirname(os.path.abspath(__file__))
+    print('input_dir:', input_dir)
+    bill_files = get_files(input_dir)
     if len(bill_files) == 0:
         print('当前目录下没有账单文件')
         sys.exit()
@@ -246,7 +255,7 @@ if __name__ == '__main__':
     # 创建qianji 账单模板 excel
     # qianji_helper = QianJiHelper(xlsx_name=output_name)
 
-    df_all = get_bills()
+    df_all = get_bills(bill_files)
 
     # 加载关键字到类别的映射
     keyword_to_category_mapping = load_keyword_mapping('category_mapping.json')
@@ -265,7 +274,7 @@ if __name__ == '__main__':
     # 以年月为文件名
     ISO_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
     theTime = datetime.datetime.now().strftime(ISO_TIME_FORMAT)
-    output_name = theTime[:7] + '.xlsx'
+    output_name = os.path.join(input_dir, theTime[:7] + '.xlsx')
     qianji_helper = QianJiHelper(xlsx_name=output_name)
 
     qianji_helper.write_data(df_all)
