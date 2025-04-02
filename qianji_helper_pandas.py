@@ -181,7 +181,8 @@ class QianJiHelper(object):
             sheet1 = wb.sheets["sheet1"]
             max_row = sheet1.used_range.last_cell.row
             # 写入数据
-            sheet1.range(1 + max_row, 1).value = bills_df.values
+            sheet1.range((1 + max_row, 1)).value = bills_df.values
+            # sheet1.range("a2").value = bills_df.values
             wb.save()
             wb.close()
         else:
