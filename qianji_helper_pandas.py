@@ -221,7 +221,7 @@ def get_bills(bill_files):
         if os.path.basename(file).startswith('交易明细'):  # 建设银行
             ccbc_bills_df = load_ccbc_bills(xlsx_path=file)
     # 组合df
-    df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df])
+    df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df], ignore_index=True)
     return df_all
 
 
@@ -260,7 +260,6 @@ if __name__ == '__main__':
     # 加载关键字到类别的映射
     keyword_to_category_mapping = load_keyword_mapping('category_mapping.json')
 
-    # todo: refine category
     for index, row in df_all.iterrows():
         remark = row['备注']
         if pd.isnull(remark):
@@ -268,7 +267,8 @@ if __name__ == '__main__':
         category = classify_text(remark, keyword_to_category_mapping)
         if category is not None:
             # print(f"备注: '{remark}' -> 类别: {category}")
-            row['分类'] = category
+            # row['分类'] = category # 这种方式不一定能修改 df_all 的内容
+            df_all.loc[index, '分类'] = category  # 使用 .loc 直接修改 DataFrame
 
     # 创建qianji 账单模板 excel
     # 以年月为文件名
