@@ -26,19 +26,15 @@ def load_alipay_bills(xlsx_path):
     df_lite = df.dropna(axis=0, how='any')
     # 1.2 筛选出空白行并删除
     # 删除 订单编号 是空的，删除交易状态不是交易成功的
-    to_drop_index = []
-    for index, row in df_lite.iterrows():
-        if row['商家订单号               '].isspace() and row['付款时间                '].isspace():
-            to_drop_index.append(True)
-            continue
-        if '交易关闭' in row['交易状态    '] or '退款成功' in row['交易状态    ']:
-            to_drop_index.append(True)
-            continue
-        to_drop_index.append(False)
-    # 从dataframe 中删除过滤出的行
-    empty_series = pd.Series(to_drop_index)
-    index_names = df_lite[empty_series].index
-    df_lite = df_lite.drop(index_names, inplace=False)
+    # 使用布尔索引进行过滤
+    condition1 = df_lite['商家订单号               '].str.isspace() & df_lite['付款时间                '].str.isspace()
+    condition2 = df_lite['交易状态    '].str.contains('交易关闭|退款成功', na=False)
+
+    # 合并条件
+    to_drop = condition1 | condition2
+
+    # 删除符合条件的行
+    df_lite = df_lite[~to_drop]
 
     # 另一种遍历筛选方式：只筛选订单号为空的行
     # to_drop_index = []
@@ -120,21 +116,13 @@ def load_ccbc_bills(xlsx_path):
     #        '交易地点                '],
     # df_lite = df.drop(columns=['记账日          ', '账户余额          ', '币种          ', '对方账号          '],
     #                       inplace=False)
-    df_lite['时间'] = ''
-    df_lite['类型'] = ''
-    df_lite['金额'] = ''
-
-    rows, cols = df_lite.shape
-    for i in range(0, rows):
-        # 重新组合时间字符串
-        data = str(df_lite['交易日期          '][i])
-        data = data[0:4] + '/' + data[4:6] + '/' + data[6:8]
-        df_lite['时间'][i] = data + ' ' + str(df_lite['交易时间                '][i])
-
-        df_lite['类型'][i] = '支出' if float(
-            str(df_lite['支出                '][i]).replace(',', '')) > 0.00 else '收入'
-        df_lite['金额'][i] = df_lite['支出                '][i] if df_lite['类型'][i] == '支出' else \
-            df_lite['收入                '][i]
+    df_lite['时间'] = df_lite['交易日期          '].astype(str).str[:4] + '/' + df_lite['交易日期          '].astype(
+        str).str[4:6] + '/' + df_lite['交易日期          '].astype(str).str[6:8] + ' ' + df_lite[
+                          '交易时间                ']
+    df_lite['类型'] = df_lite['支出                '].apply(
+        lambda x: '支出' if float(str(x).replace(',', '')) > 0.00 else '收入')
+    df_lite['金额'] = df_lite.apply(
+        lambda row: row['支出                '] if row['类型'] == '支出' else row['收入                '], axis=1)
 
     df_lite = df_lite.drop(columns=['交易日期          ', '交易时间                '], inplace=False)
 
@@ -232,8 +220,11 @@ def load_keyword_mapping(file_path):
 
 
 def classify_text(text, keyword_to_category_mapping):
+    if pd.isnull(text):
+        return None
+    text_lower = text.lower()
     for keyword, category in keyword_to_category_mapping.items():
-        if keyword.lower() in text.lower():  # 不区分大小写匹配
+        if keyword.lower() in text_lower:  # 不区分大小写匹配
             return category
     return None
 
@@ -268,13 +259,13 @@ if __name__ == '__main__':
         if category is not None:
             # print(f"备注: '{remark}' -> 类别: {category}")
             # row['分类'] = category # 这种方式不一定能修改 df_all 的内容
-            df_all.loc[index, '分类'] = category  # 使用 .loc 直接修改 DataFrame
+            df_all.loc[index, '分类'] = category  # 使用 .loc 直接修改 DataFrame,注意不能有重复index（concat 默认产生重复index）
 
     # 创建qianji 账单模板 excel
     # 以年月为文件名
-    ISO_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+    ISO_TIME_FORMAT = '%Y-%m-%d_%H%M%S'
     theTime = datetime.datetime.now().strftime(ISO_TIME_FORMAT)
-    output_name = os.path.join(input_dir, theTime[:7] + '.xlsx')
+    output_name = os.path.join(input_dir, theTime + '.xlsx')
     qianji_helper = QianJiHelper(xlsx_name=output_name)
 
     qianji_helper.write_data(df_all)
