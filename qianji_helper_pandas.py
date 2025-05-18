@@ -13,7 +13,7 @@ USING_XLWINGS = True
 
 # 加载支付宝账单数据
 def load_alipay_bills(xlsx_path):
-    print('load_alipay_bills')
+    print(f'处理 支付宝账单: {xlsx_path}')
     # 跳过头部4行信息
     df = pd.read_csv(xlsx_path, encoding='gbk', skiprows=4)
     # print('df.columns\n', df.columns)
@@ -71,13 +71,13 @@ def load_alipay_bills(xlsx_path):
     # 5. 排序
     dst_df = dst_df[
         ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方', '商品名称']]
-    print('load_alipay_bills done')
+    print('done')
     return dst_df
 
 
 # 加载微信账单
 def load_wechat_bills(xlsx_path):
-    print('load_wechat_bills_pandas')
+    print(f'处理 微信账单: {xlsx_path}')
     # 跳过头部16行信息
     df = pd.read_csv(xlsx_path, skiprows=16)
     # 删除不需要的列
@@ -99,12 +99,12 @@ def load_wechat_bills(xlsx_path):
     # 排序 本质上应该是按列组合成新的 dataframe
     dst_df = df_lite[
         ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方', '商品名称']]
-    print('load_wechat_bills_pandas done')
+    print('done')
     return dst_df
 
 
 def load_ccbc_bills(xlsx_path):
-    print('load_ccbc_bills')
+    print(f'处理 建设银行 账单: {xlsx_path}')
     # 跳过头部5行信息
     df = pd.read_excel(xlsx_path, skiprows=5)
     # 删掉最后一行无效值
@@ -140,8 +140,33 @@ def load_ccbc_bills(xlsx_path):
     # 列重命名
     dst_df.columns = ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单标记', '账单图片', '交易对方',
                       '商品名称']
-    print('load_ccbc_bills done')
+    print('done')
     return dst_df
+
+
+def load_cib_bills(xlsx_path):
+    print(f'处理 兴业银行 账单: {xlsx_path}')
+    # 读入并跳过头部10行信息
+    df = pd.read_excel(xlsx_path, skiprows=10)
+    # 删掉最后一行无效值
+    df_lite = df.drop(df.index[[-1]], inplace=False)
+    df_new = pd.DataFrame()
+    df_new['时间'] = df_lite['交易时间']
+    df_new['类型'] = df_lite['支出'].apply(
+        lambda x: '支出' if float(str(x).replace(',', '')) > 0.00 else '收入')
+    df_new['金额'] = df_lite.apply(
+        lambda row: row['支出'] if float(str(row['支出']).replace(',', '')) > 0 else row['收入'], axis=1)
+    df_new['金额'] = df_new['金额'].apply(lambda x: float(str(x).replace(',', '')))
+
+    # 新增列并赋值
+    df_new['账户1'] = '兴业银行'
+    df_new['账户2'] = ''
+    df_new['分类'] = ' '
+    df_new['备注'] = df['用途']
+    df_new['账单标记'] = ''
+    df_new['账单图片'] = ''
+    print('done')
+    return df_new
 
 
 class QianJiHelper(object):
@@ -202,6 +227,7 @@ def get_bills(bill_files):
     wechat_bills_df = pd.DataFrame()
     alipy_bills_df = pd.DataFrame()
     ccbc_bills_df = pd.DataFrame()
+    cib_bills_df = pd.DataFrame()
     for file in bill_files:
         if os.path.basename(file).startswith('微信'):
             wechat_bills_df = load_wechat_bills(xlsx_path=file)
@@ -209,8 +235,10 @@ def get_bills(bill_files):
             alipy_bills_df = load_alipay_bills(xlsx_path=file)
         if os.path.basename(file).startswith('交易明细'):  # 建设银行
             ccbc_bills_df = load_ccbc_bills(xlsx_path=file)
+        if os.path.basename(file).startswith('兴业银行'):
+            cib_bills_df = load_cib_bills(xlsx_path=file)
     # 组合df
-    df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df], ignore_index=True)
+    df_all = pd.concat([wechat_bills_df, alipy_bills_df, ccbc_bills_df, cib_bills_df], ignore_index=True)
     return df_all
 
 
