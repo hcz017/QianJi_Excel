@@ -233,7 +233,7 @@ def get_bills(bill_files):
             wechat_bills_df = load_wechat_bills(xlsx_path=file)
         if os.path.basename(file).startswith('alipay'):
             alipy_bills_df = load_alipay_bills(xlsx_path=file)
-        if os.path.basename(file).startswith('交易明细'):  # 建设银行
+        if os.path.basename(file).startswith('建设银行'):  # 建设银行
             ccbc_bills_df = load_ccbc_bills(xlsx_path=file)
         if os.path.basename(file).startswith('兴业银行'):
             cib_bills_df = load_cib_bills(xlsx_path=file)
