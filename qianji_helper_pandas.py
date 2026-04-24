@@ -78,8 +78,11 @@ def load_alipay_bills(xlsx_path):
 # 加载微信账单
 def load_wechat_bills(xlsx_path):
     print(f'处理 微信账单: {xlsx_path}')
-    # 跳过头部16行信息
-    df = pd.read_csv(xlsx_path, skiprows=16)
+    # 跳过头部16行信息；新版导出为 xlsx，老版/自行另存为 csv 时用 gbk
+    if xlsx_path.lower().endswith(('.xlsx', '.xlsm')):
+        df = pd.read_excel(xlsx_path, skiprows=16, engine='openpyxl')
+    else:
+        df = pd.read_csv(xlsx_path, skiprows=16, encoding='gbk')
     # 删除不需要的列
     df_lite = df.drop(columns=['支付方式', '当前状态', '交易单号', '商户单号', '备注'], inplace=False)
     # 列重命名
