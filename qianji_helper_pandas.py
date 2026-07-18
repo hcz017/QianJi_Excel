@@ -80,16 +80,20 @@ def load_wechat_bills(xlsx_path):
     print(f'处理 微信账单: {xlsx_path}')
     # 跳过头部16行信息；新版导出为 xlsx，老版/自行另存为 csv 时用 gbk
     if xlsx_path.lower().endswith(('.xlsx', '.xlsm')):
-        df = pd.read_excel(xlsx_path, skiprows=16, engine='openpyxl')
+        df = pd.read_excel(xlsx_path, skiprows=17, engine='openpyxl')
     else:
-        df = pd.read_csv(xlsx_path, skiprows=16, encoding='gbk')
+        df = pd.read_csv(xlsx_path, skiprows=17, encoding='gbk')
     # 删除不需要的列
     df_lite = df.drop(columns=['支付方式', '当前状态', '交易单号', '商户单号', '备注'], inplace=False)
     # 列重命名
     df_lite.columns = ['时间', '分类', '交易对方', '商品名称', '类型', '金额']
-    # 去除 ￥ 符号
-    # df_lite['金额'] = df_lite['金额'].apply(lambda x: x[1:]).astype('float')
-    df_lite['金额'] = df_lite['金额'].str.slice(1).astype('float')
+    # 去除 ￥/¥（CSV 有前缀；xlsx 导出已是数值）
+    df_lite['金额'] = (
+        df_lite['金额']
+        .astype(str)
+        .str.replace(r'[￥¥,]', '', regex=True)
+        .astype('float')
+    )
     # 新增一列并赋值
     df_lite['账户1'] = '微信'
     df_lite['账户2'] = ''
